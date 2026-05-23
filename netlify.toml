@@ -1,0 +1,16 @@
+[build]
+  # O diretório onde ficam os arquivos visuais (HTML, CSS, JS)
+  publish = "public"
+  # O diretório onde as funções Lambda (Back-end) vão morar
+  functions = "netlify/functions"
+
+[dev]
+  # Porta padrão para o servidor local rodar
+  port = 8888
+  publish = "public"
+
+# Mágica de Roteamento: Transforma /.netlify/functions/ em /api/
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
