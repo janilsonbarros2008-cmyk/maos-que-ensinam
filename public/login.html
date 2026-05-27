@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Mãos que Ensinam</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div class="container" style="max-width: 500px; margin-top: 10vh;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <h1 style="margin-bottom: 0.5rem;">Mãos que Ensinam</h1>
+      <p style="color: var(--text-light); font-weight: 600;">Plataforma de Tutoria Inclusiva</p>
+    </div>
+
+    <div class="card">
+      <h2>Aceder à Conta</h2>
+      <p style="color: var(--text-light); margin-bottom: 2rem; font-size: 0.95rem;">
+        Introduza as suas credenciais para entrar na plataforma.
+      </p>
+
+      <div id="alertBox" class="alert alert-error"></div>
+
+      <form id="formLogin">
+        <div class="form-group">
+          <label for="email">E-mail Registado</label>
+          <input type="email" id="email" name="email" placeholder="exemplo@escola.com" required autocomplete="username">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 2rem;">
+          <label for="senha">Palavra-passe</label>
+          <input type="password" id="senha" name="senha" placeholder="Introduza a sua palavra-passe" required autocomplete="current-password">
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="btnSubmit">Entrar no Sistema</button>
+      </form>
+    </div>
+
+    <div style="text-align: center; margin-top: 1.5rem;">
+      <p style="font-size: 0.95rem; color: var(--text-light);">
+        Problemas com o acesso? Contacte a coordenação da escola.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('formLogin');
+    const alertBox = document.getElementById('alertBox');
+    const btnSubmit = document.getElementById('btnSubmit');
+
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      // Configura o estado de carregamento do botão
+      btnSubmit.innerText = 'A verificar dados...';
+      btnSubmit.disabled = true;
+      alertBox.style.display = 'none';
+
+      const email = document.getElementById('email').value;
+      const senha = document.getElementById('senha').value;
+
+      try {
+        // Faz a requisição POST para a nossa função Lambda mapeada no netlify.toml
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, senha })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // Guardar o Token JWT e as informações básicas no localStorage
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('userRole', data.usuario.role);
+          localStorage.setItem('userName', data.usuario.nome);
+
+          // Redireciona para o Dashboard Geral
+          window.location.href = 'dashboard.html';
+        } else {
+          // Exibe erros tratados vindos do servidor (ex: "Credenciais inválidas")
+          mostrarErro(data.error || 'Não foi possível efetuar o login.');
+        }
+      } catch (error) {
+        mostrarErro('Erro de conexão com o servidor. Verifique se a API está ativa.');
+      } finally {
+        // Restaura o estado original do botão
+        btnSubmit.innerText = 'Entrar no Sistema';
+        btnSubmit.disabled = false;
+      }
+    });
+
+    function mostrarErro(mensagem) {
+      alertBox.innerText = mensaje = mensagem;
+      alertBox.style.display = 'block';
+    }
+
+    // Proteção preventiva: Se o utilizador já tiver um token válido, pode ser interessante 
+    // redirecioná-lo diretamente para o dashboard (opcional para o MVP)
+    if (localStorage.getItem('token')) {
+      console.log('Utilizador já autenticado. Redirecionando...');
+      // window.location.href = 'dashboard.html';
+    }
+  </script>
+</body>
+</html>

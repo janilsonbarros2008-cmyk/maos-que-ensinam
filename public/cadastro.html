@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastro - Mãos que Ensinam</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div class="container">
+    <div class="card">
+      <h2>Cadastro de Usuário</h2>
+      <p style="color: var(--text-light); margin-bottom: 2rem;">
+        Insira os dados para registrar um novo membro na plataforma Mãos que Ensinam.
+      </p>
+
+      <div id="alertBox" class="alert"></div>
+
+      <form id="formCadastro">
+        <div class="form-group">
+          <label for="nome">Nome Completo</label>
+          <input type="text" id="nome" name="nome" placeholder="Ex: João Vinícius Sena" required>
+        </div>
+
+        <div class="form-group">
+          <label for="email">E-mail Institucional ou Pessoal</label>
+          <input type="email" id="email" name="email" placeholder="aluno@escola.com" required>
+        </div>
+
+        <div class="form-group">
+          <label for="matricula">Matrícula (SEDUC / SIAPE)</label>
+          <input type="text" id="matricula" name="matricula" placeholder="Ex: 2026001" required>
+        </div>
+
+        <div class="form-group">
+          <label for="senha">Senha de Acesso</label>
+          <input type="password" id="senha" name="senha" placeholder="Crie uma senha segura" required>
+        </div>
+
+        <div class="form-group">
+          <label for="role">Nível de Acesso</label>
+          <select id="role" name="role" required>
+            <option value="" disabled selected>Selecione um perfil...</option>
+            <option value="MONITOR">Aluno Monitor</option>
+            <option value="MULTIPROFISSIONAL">Equipe Multiprofissional</option>
+            <option value="COORDENADOR">Coordenação Pedagógica</option>
+          </select>
+        </div>
+
+        <div id="camposMonitor" style="display: none; background-color: var(--primary-light); padding: 1.5rem; border-radius: var(--radius); margin-bottom: 1.5rem;">
+          <h3 style="font-size: 1.1rem; color: var(--primary-color);">Dados Acadêmicos (Monitor)</h3>
+          
+          <div class="form-group">
+            <label for="turma">Turma</label>
+            <input type="text" id="turma" name="turma" placeholder="Ex: 2º Ano de Informática">
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="turno">Turno</label>
+            <select id="turno" name="turno">
+              <option value="MANHÃ">Manhã</option>
+              <option value="TARDE">Tarde</option>
+              <option value="INTEGRAL">Integral</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="camposProfissional" style="display: none; background-color: var(--accent-light); padding: 1.5rem; border-radius: var(--radius); margin-bottom: 1.5rem;">
+          <h3 style="font-size: 1.1rem; color: var(--accent-color);">Dados Profissionais</h3>
+          
+          <div class="form-group">
+            <label for="especialidade">Especialidade / Cargo</label>
+            <input type="text" id="especialidade" name="especialidade" placeholder="Ex: Psicopedagogo, Fonoaudiólogo">
+          </div>
+          
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="escolaVinculada">Escola Vinculada</label>
+            <input type="text" id="escolaVinculada" name="escolaVinculada" placeholder="Ex: CETI Domingos Rodrigues de Carvalho">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" id="btnSubmit">Cadastrar Usuário</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('formCadastro');
+    const roleSelect = document.getElementById('role');
+    const camposMonitor = document.getElementById('camposMonitor');
+    const camposProfissional = document.getElementById('camposProfissional');
+    const alertBox = document.getElementById('alertBox');
+    const btnSubmit = document.getElementById('btnSubmit');
+
+    // 1. Lógica Visual: Mostrar/Esconder campos baseados no perfil
+    roleSelect.addEventListener('change', function() {
+      // Esconde todos primeiro
+      camposMonitor.style.display = 'none';
+      camposProfissional.style.display = 'none';
+
+      // Mostra o bloco correto
+      if (this.value === 'MONITOR') {
+        camposMonitor.style.display = 'block';
+      } else if (this.value === 'MULTIPROFISSIONAL') {
+        camposProfissional.style.display = 'block';
+      }
+      // Se for COORDENADOR, ambos continuam ocultos, pois não exigimos campos extras
+    });
+
+    // 2. Lógica de Envio de Dados para a nossa API (Netlify Functions)
+    form.addEventListener('submit', async function(e) {
+      e.preventDefault(); // Impede a página de recarregar
+      
+      // Muda o botão para estado de carregamento
+      btnSubmit.innerText = 'Cadastrando...';
+      btnSubmit.disabled = true;
+      alertBox.style.display = 'none';
+
+      // Coleta os dados universais
+      const payload = {
+        nome: document.getElementById('nome').value,
+        email: document.getElementById('email').value,
+        matricula: document.getElementById('matricula').value,
+        senha: document.getElementById('senha').value,
+        role: roleSelect.value
+      };
+
+      // Anexa os dados específicos dependendo de quem está sendo cadastrado
+      if (payload.role === 'MONITOR') {
+        payload.dadosMonitor = {
+          turma: document.getElementById('turma').value,
+          turno: document.getElementById('turno').value
+        };
+      } else if (payload.role === 'MULTIPROFISSIONAL') {
+        payload.dadosProfissional = {
+          especialidade: document.getElementById('especialidade').value,
+          escolaVinculada: document.getElementById('escolaVinculada').value
+        };
+      }
+
+      try {
+        // Envia o pacote de dados (payload) para o nosso back-end
+        const response = await fetch('/api/cadastro', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        // Tratamento da resposta do servidor
+        if (response.ok) {
+          mostrarAlerta('Usuário cadastrado com sucesso!', 'success');
+          form.reset(); // Limpa o formulário
+          camposMonitor.style.display = 'none';
+          camposProfissional.style.display = 'none';
+        } else {
+          // Exibe o erro que o Mongoose nos enviou
+          mostrarAlerta(data.error || 'Erro ao realizar o cadastro.', 'error');
+        }
+      } catch (error) {
+        mostrarAlerta('Erro de conexão com o servidor.', 'error');
+      } finally {
+        // Restaura o botão
+        btnSubmit.innerText = 'Cadastrar Usuário';
+        btnSubmit.disabled = false;
+      }
+    });
+
+    // Função utilitária para exibir a caixa de alerta na tela
+    function mostrarAlerta(mensagem, tipo) {
+      alertBox.innerText = mensagem;
+      alertBox.className = `alert alert-${tipo}`; // alert-error ou alert-success (do CSS)
+      alertBox.style.display = 'block';
+    }
+  </script>
+</body>
+</html>

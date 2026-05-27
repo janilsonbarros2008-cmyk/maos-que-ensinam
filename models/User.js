@@ -2,6 +2,9 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
+  // ==========================================
+  // CAMPOS UNIVERSAIS (Comuns a todos)
+  // ==========================================
   nome: { 
     type: String, 
     required: [true, 'O nome é obrigatório'] 
@@ -9,32 +12,74 @@ const userSchema = new mongoose.Schema({
   email: { 
     type: String, 
     required: [true, 'O e-mail é obrigatório'], 
-    unique: true // Impede dois cadastros com o mesmo e-mail
+    unique: true 
   },
   senha: { 
     type: String, 
     required: true 
   },
   matricula: { 
+    // Para alunos: Matrícula da SEDUC. Para servidores: Matrícula SIAPE/Estado.
     type: String, 
     required: true 
   },
   role: { 
     type: String, 
-    enum: ['MONITOR', 'TUTORADO', 'COORDENADOR'], // Trava as opções possíveis
+    enum: ['MONITOR', 'COORDENADOR', 'MULTIPROFISSIONAL', 'ADMIN'],
     required: true 
   },
-  xp: { 
-    type: Number, 
-    default: 0 
+
+  // ==========================================
+  // ATRIBUTOS ESPECÍFICOS: ALUNO MONITOR
+  // ==========================================
+  dadosMonitor: {
+    turma: { type: String }, // ex: "2º Ano A"
+    turno: { type: String, enum: ['MANHÃ', 'TARDE', 'INTEGRAL'] },
+    xp: { type: Number, default: 0 },
+    horasValidadas: { type: Number, default: 0 }
   },
-  horasValidadas: { 
-    type: Number, 
-    default: 0 
+
+  // ==========================================
+  // ATRIBUTOS ESPECÍFICOS: EQUIPE ESCOLAR
+  // (Coordenador e Multiprofissional)
+  // ==========================================
+  dadosProfissional: {
+    especialidade: { type: String }, // ex: "Psicopedagogo", "Fonoaudiólogo", "Coordenador de Área"
+    registroConselho: { type: String }, // ex: "CRP 12345" (opcional, útil para área da saúde)
+    escolaVinculada: { type: String } // Prepara o app para atuar em múltiplas escolas da GRE
   }
 }, { 
-  timestamps: true // Cria automaticamente os campos createdAt e updatedAt
+  timestamps: true 
 });
 
-// Impede re-declaração do modelo caso o arquivo seja chamado múltiplas vezes pela lambda
+// ==========================================
+// MIDDLEWARE DE VALIDAÇÃO CONDICIONAL
+// ==========================================
+// Esta função roda automaticamente antes de salvar no banco e garante a integridade dos dados.
+userSchema.pre('validate', function(next) {
+  // Se for um Monitor, ele obrigatoriamente precisa ter os dados de turma e turno preenchidos
+  if (this.role === 'MONITOR') {
+    if (!this.dadosMonitor || !this.dadosMonitor.turma || !this.dadosMonitor.turno) {
+      this.invalidate('dadosMonitor', 'Para alunos monitores, é obrigatório informar a turma e o turno.');
+    }
+    // Garante que a equipe escolar não tenha dados de monitor
+    this.dadosProfissional = undefined; 
+  }
+
+  // Se for Multiprofissional, seria interessante exigir a especialidade
+  if (this.role === 'MULTIPROFISSIONAL') {
+    if (!this.dadosProfissional || !this.dadosProfissional.especialidade) {
+      this.invalidate('dadosProfissional.especialidade', 'Informe a especialidade do profissional (Ex: Psicólogo, Psicopedagogo).');
+    }
+    this.dadosMonitor = undefined;
+  }
+
+  // Se for Coordenador, limpamos os dados de monitor para não sujar o banco
+  if (this.role === 'COORDENADOR') {
+    this.dadosMonitor = undefined;
+  }
+
+  next();
+});
+
 module.exports = mongoose.models.User || mongoose.model('User', userSchema);

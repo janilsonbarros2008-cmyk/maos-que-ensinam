@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Monitor - Mãos que Ensinam</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+    <div class="dashboard-wrapper">
+
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <i class="fa-solid fa-hands-holding-child"></i>
+                <span>Mãos que Ensinam</span>
+            </div>
+
+            <nav class="sidebar-menu">
+                <a href="#" class="menu-item active" data-tab="visao-geral">
+                    <i class="fa-solid fa-chart-pie"></i> Visão Geral
+                </a>
+                <a href="#" class="menu-item" data-tab="trilhas">
+                    <i class="fa-solid fa-graduation-cap"></i> Trilhas de Capacitação
+                </a>
+                <a href="#" class="menu-item" data-tab="chat-ia">
+                    <i class="fa-solid fa-robot"></i> Assistente de IA
+                </a>
+                <a href="#" class="menu-item" data-tab="mentorados">
+                    <i class="fa-solid fa-user-group"></i> Meus Mentorados
+                </a>
+                <a href="#" class="menu-item" data-tab="diario">
+                    <i class="fa-solid fa-book-open"></i> Diário de Bordo
+                </a>
+                <a href="#" class="menu-item" data-tab="suporte">
+                    <i class="fa-solid fa-comment-medical"></i> Falar com Apoio
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <button id="btnLogout" class="btn-logout">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Sair do Sistema
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+
+            <section id="visao-geral" class="tab-content active">
+                <header class="content-header">
+                    <div class="greeting">
+                        <h1>Olá, <span id="monitorNome">Monitor</span>!</h1>
+                        <p>Pronto para fazer a diferença hoje?</p>
+                    </div>
+                    <div class="search-bar">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" placeholder="Buscar informações...">
+                    </div>
+                </header>
+
+                <div class="summary-grid">
+                    <div class="card summary-card">
+                        <div class="card-icon blue"><i class="fa-solid fa-clock"></i></div>
+                        <div class="card-info">
+                            <h3>Horas Realizadas</h3>
+                            <p class="metric" id="metricHoras">0h</p>
+                        </div>
+                    </div>
+
+                    <div class="card summary-card">
+                        <div class="card-icon green"><i class="fa-solid fa-calendar-check"></i></div>
+                        <div class="card-info">
+                            <h3>Próxima Sessão</h3>
+                            <p class="metric-text" id="metricProxima">Nenhuma agendada</p>
+                        </div>
+                    </div>
+
+                    <div class="card summary-card">
+                        <div class="card-icon water"><i class="fa-solid fa-star"></i></div>
+                        <div class="card-info">
+                            <h3>Capacitação</h3>
+                            <div class="progress-container">
+                                <span id="txtProgresso">0%</span>
+                                <div class="progress-bar">
+                                    <div id="barProgresso" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-sections">
+                    <div class="card featured-card">
+                        <h2><i class="fa-solid fa-play"></i> Continue de Onde Parou</h2>
+                        <div class="featured-content">
+                            <h3>Módulo 2: Técnicas de Foco para TDAH</h3>
+                            <p>Aprenda estratégias psicopedagógicas práticas para prender a atenção e reduzir a
+                                distração durante as tarefas.</p>
+                            <button class="btn btn-primary" style="width: auto; margin-top: 1rem;">Retomar
+                                Treinamento</button>
+                        </div>
+                    </div>
+
+                    <div class="card quick-actions-card">
+                        <h2>Acesso Rápido</h2>
+                        <div class="quick-actions-grid">
+                            <button class="action-btn crisis">
+                                <i class="fa-solid fa-kit-medical"></i> Kit de Emergência / Crise
+                            </button>
+                            <button class="action-btn tips">
+                                <i class="fa-solid fa-comments"></i> Dicas de Comunicação
+                            </button>
+                            <button class="action-btn games">
+                                <i class="fa-solid fa-gamepad"></i> Jogos Educativos
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="trilhas" class="tab-content">
+                <div class="card">
+                    <h2>Trilhas de Capacitação</h2>
+                    <p style="color: var(--text-light);">Conteúdo em desenvolvimento pela equipe multiprofissional.</p>
+                </div>
+            </section>
+
+            <section id="mentorados" class="tab-content">
+                <div class="card">
+                    <h2>Meus Mentorados</h2>
+                    <p style="color: var(--text-light);">Agenda e perfis dos estudantes vinculados à sua tutoria.</p>
+                </div>
+            </section>
+
+            <section id="diario" class="tab-content">
+                <div class="card">
+                    <h2>Diário de Bordo</h2>
+                    <p style="color: var(--text-light);">Histórico e registro de evolução das sessões de tutoria.</p>
+                </div>
+            </section>
+
+            <section id="suporte" class="tab-content">
+                <div class="card">
+                    <h2><i class="fa-solid fa-comment-medical"></i> Falar com a Coordenação / Equipe Multiprofissional
+                    </h2>
+                    <p style="color: var(--text-light); margin-bottom: 2rem;">
+                        Teve alguma intercorrência, identificou uma nova necessidade ou precisa de orientação
+                        psicopedagógica? Abra um chamado abaixo. A equipe escolar receberá o seu relato imediatamente.
+                    </p>
+
+                    <div id="alertSuporte" class="alert"></div>
+
+                    <form id="formChamado">
+                        <div class="form-group">
+                            <label for="chamadoAssunto">Assunto Principal</label>
+                            <input type="text" id="chamadoAssunto"
+                                placeholder="Ex: Sugestão de material tátil / Mudança de comportamento do tutorado"
+                                required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="chamadoUrgencia">Nível de Urgência</label>
+                            <select id="chamadoUrgencia" required>
+                                <option value="BAIXO">Baixo (Apenas uma dúvida ou sugestão rotineira)</option>
+                                <option value="MÉDIO" selected>Médio (Preciso de orientação para a próxima semana)
+                                </option>
+                                <option value="ALTO">Alto (Dificuldade acentuada observada em sala de aula)</option>
+                                <option value="EMERGÊNCIA">Emergência (Crise sensorial ou intercorrência grave hoje)
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 2rem;">
+                            <label for="chamadoMensagem">Relato Detalhado</label>
+                            <textarea id="chamadoMensagem" rows="6"
+                                placeholder="Descreva de forma clara o que aconteceu ou qual é a sua dúvida para que o psicopedagogo ou coordenador possa te ajudar da melhor forma..."
+                                required></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="btnEnviarChamado">
+                            <i class="fa-solid fa-paper-plane"></i> Enviar Pedido de Apoio
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <section id="chat-ia" class="tab-content">
+                <div class="chat-layout">
+                    <div class="chat-header-info">
+                        <h2><i class="fa-solid fa-robot"></i> Assistente de IA</h2>
+                        <p style="color: var(--text-light);">Tire dúvidas pedagógicas, peça sugestões de adaptação de
+                            materiais ou orientações de acolhimento em tempo real.</p>
+                    </div>
+
+                    <div class="chat-window card">
+                        <div id="chatMessages" class="chat-messages">
+                            <div class="message ai-message">
+                                <div class="message-avatar"><i class="fa-solid fa-robot"></i></div>
+                                <div class="message-text">
+                                    Olá! Sou o seu Assistente de IA especialista em inclusão escolar. Como posso te
+                                    apoiar nas suas atividades de monitoria hoje? Você pode me pedir dicas de
+                                    comunicação, dinâmicas ou estratégias para aplicar com seus colegas tutorados.
+                                </div>
+                            </div>
+                        </div>
+
+                        <form id="formChat" class="chat-input-area">
+                            <input type="text" id="chatInput"
+                                placeholder="Digite aqui sua dúvida sobre monitoria ou inclusão..." required
+                                autocomplete="off">
+                            <button type="submit" class="btn-send" id="btnSendChat">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="js/dashboard.js"></script>
+</body>
+
+</html>

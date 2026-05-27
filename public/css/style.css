@@ -1,0 +1,180 @@
+/* Importando uma fonte amigável, arredondada e de alta legibilidade */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
+
+:root {
+  /* ==========================================
+     PALETA DE CORES (Sensory-Friendly)
+     ========================================== */
+  --bg-color: #F4F7F6;       /* Off-white levemente acinzentado/esverdeado para descanso visual */
+  --bg-card: #FFFFFF;        /* Branco puro apenas para destacar os blocos de conteúdo */
+  
+  --text-main: #2C3E50;      /* Cinza escuro/azulado. Evitamos o preto puro (#000) que causa fadiga visual */
+  --text-light: #546E7A;     /* Para textos de apoio e legendas */
+
+  /* Cores de Ação (Com contraste testado contra o fundo branco) */
+  --primary-color: #3A7CA5;  /* Azul calmo, sólido o suficiente para botões e títulos */
+  --primary-light: #D9E8F5;  /* Azul pastel para fundos de destaque suave */
+  
+  --accent-color: #2A9D8F;   /* Verde-água elegante e com excelente contraste */
+  --accent-light: #E0F2F1;   /* Verde pastel para avisos positivos ou tags de "Validado" */
+
+  --error-color: #E76F51;    /* Terroso. Avisa do erro sem gerar alarme visual (menos agressivo que vermelho vivo) */
+
+  /* ==========================================
+     TIPOGRAFIA E ESTRUTURA
+     ========================================== */
+  --font-family: 'Nunito', system-ui, sans-serif;
+  --base-size: 18px;         /* Fonte 2px maior que o padrão web, crucial para dislexia e visão subnormal */
+  --radius: 12px;            /* Bordas arredondadas passam sensação de segurança e acolhimento */
+  --shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  --transition: 0.3s ease;
+}
+
+/* ==========================================
+   RESET E CONFIGURAÇÕES GERAIS
+   ========================================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-family);
+  font-size: var(--base-size);
+  color: var(--text-main);
+  background-color: var(--bg-color);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Tipografia de Alto Contraste */
+h1, h2, h3 {
+  color: var(--primary-color);
+  font-weight: 700;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+
+h1 { font-size: 2.2rem; }
+h2 { font-size: 1.8rem; }
+h3 { font-size: 1.4rem; }
+
+/* Acessibilidade de Teclado (Foco Visual Claro) */
+*:focus-visible {
+  outline: 3px solid var(--accent-color);
+  outline-offset: 3px;
+}
+
+/* ==========================================
+   COMPONENTES BASE (Para reuso nas telas)
+   ========================================== */
+.container {
+  width: 100%;
+  max-width: 800px; /* Layout mais estreito evita que o olho se perca na leitura de ponta a ponta */
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+/* O "Cartão" branco que vai segurar os formulários e informações */
+.card {
+  background-color: var(--bg-card);
+  border-radius: var(--radius);
+  padding: 2rem;
+  box-shadow: var(--shadow);
+  margin-bottom: 1.5rem;
+}
+
+/* Botões (Áreas de toque grandes e seguras) */
+.btn {
+  display: inline-block;
+  width: 100%; /* Em mobile, botões devem ocupar toda a largura */
+  padding: 1rem 1.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  font-family: var(--font-family);
+  text-align: center;
+  text-decoration: none;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: var(--transition);
+  min-height: 54px; /* Acima do recomendado pelo Google (48px) para garantir acerto fácil no toque */
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  color: #FFFFFF;
+}
+
+.btn-primary:hover {
+  background-color: #2F668A; /* Escurece 10% no hover */
+  transform: translateY(-2px);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--primary-color);
+  border: 2px solid var(--primary-color);
+}
+
+.btn-outline:hover {
+  background-color: var(--primary-light);
+}
+
+/* Entradas de Texto (Formulários) */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.form-group input, 
+.form-group select, 
+.form-group textarea {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+  font-family: var(--font-family);
+  border: 2px solid #E0E0E0;
+  border-radius: var(--radius);
+  background-color: var(--bg-color); /* Fundo sutilmente diferente do card para destacar a área de digitação */
+  color: var(--text-main);
+  transition: var(--transition);
+}
+
+/* Estado de Foco do Input (Muito importante para alunos com TDAH não perderem onde estão digitando) */
+.form-group input:focus, 
+.form-group select:focus, 
+.form-group textarea:focus {
+  border-color: var(--primary-color);
+  outline: none;
+  background-color: var(--bg-card);
+  box-shadow: 0 0 0 4px var(--primary-light);
+}
+
+/* Alertas e Mensagens do Sistema */
+.alert {
+  padding: 1rem;
+  border-radius: var(--radius);
+  margin-bottom: 1.5rem;
+  font-weight: 600;
+  display: none; /* Fica oculto até o JavaScript chamar */
+}
+
+.alert-error {
+  background-color: #FADBD8;
+  color: var(--error-color);
+  border-left: 6px solid var(--error-color);
+}
+
+.alert-success {
+  background-color: var(--accent-light);
+  color: var(--accent-color);
+  border-left: 6px solid var(--accent-color);
+}
