@@ -153,14 +153,56 @@
                     </div>
                 </div>
             </section>
-
             <section id="diario" class="tab-content">
-                <div class="card">
-                    <h2>Diário de Bordo</h2>
-                    <p style="color: var(--text-light);">Histórico e registro de evolução das sessões de tutoria.</p>
+                <div style="margin-bottom: 2rem;">
+                    <h2><i class="fa-solid fa-book-journal-whills"></i> Diário de Bordo</h2>
+                    <p style="color: var(--text-light);">Registe as sessões de tutoria. As horas e o XP serão creditados
+                        após a validação da coordenação pedagógica.</p>
+                </div>
+
+                <div class="card" style="margin-bottom: 2rem; border-top: 4px solid var(--primary-color);">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--primary-color);">Novo Registo de Sessão</h3>
+                    <div id="alertaDiario" class="alert" style="display: none;"></div>
+
+                    <form id="formDiario">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                            <div class="form-group">
+                                <label>Estudante Acompanhado</label>
+                                <select id="diarioMentorado" required>
+                                    <option value="" disabled selected>A carregar estudantes...</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Data da Sessão</label>
+                                <input type="date" id="diarioData" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Duração (em minutos)</label>
+                            <input type="number" id="diarioTempo" min="10" max="300" placeholder="Ex: 60 (para 1 hora)"
+                                required>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Resumo das Atividades</label>
+                            <textarea id="diarioResumo" rows="4"
+                                placeholder="Descreva os conteúdos trabalhados, as dificuldades observadas e os avanços do aluno..."
+                                required></textarea>
+                        </div>
+
+                        <button type="submit" id="btnSalvarDiario" class="btn btn-primary"
+                            style="width: auto; padding: 0.8rem 2rem;">
+                            <i class="fa-solid fa-paper-plane"></i> Submeter para Validação
+                        </button>
+                    </form>
+                </div>
+
+                <h3 style="margin-bottom: 1rem; font-size: 1.2rem;">O Meu Histórico de Tutoria</h3>
+                <div id="listaDiarios" style="display: grid; gap: 1.5rem;">
                 </div>
             </section>
-
             <section id="suporte" class="tab-content">
                 <div class="card">
                     <h2><i class="fa-solid fa-comment-medical"></i> Falar com a Coordenação / Equipe Multiprofissional

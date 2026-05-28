@@ -377,9 +377,244 @@ async function carregarTrilhasMonitor() {
   });
 
   // Gatilho: Quando clicar na aba "Trilhas de Capacitação", carrega os dados caso ainda não tenham sido carregados.
-  document.querySelector('.menu-item[data-tab="trilhas"]').addEventListener('click', () => {
-    if (gridTrilhas.children.length <= 1) {
-      carregarTrilhasMonitor();
+  // Gatilho Seguro: Carrega os mentorados quando clicar na aba
+  
+ // ==========================================
+  // LÓGICA DO DIÁRIO DE BORDO
+  // ==========================================
+  const formDiario = document.getElementById('formDiario');
+  const selectDiarioMentorado = document.getElementById('diarioMentorado');
+  const listaDiarios = document.getElementById('listaDiarios');
+  const alertaDiario = document.getElementById('alertaDiario');
+
+  // Função 1: Preencher o dropdown com os alunos tutelados
+  async function carregarOpcoesMentorados() {
+    try {
+      const response = await fetch('/api/meus-mentorados', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      const data = await response.json();
+      
+      selectDiarioMentorado.innerHTML = '<option value="" disabled selected>Selecione o estudante...</option>';
+      
+      if (data.mentorados && data.mentorados.length > 0) {
+        data.mentorados.forEach(m => {
+          const opt = document.createElement('option');
+          opt.value = m._id;
+          opt.textContent = m.nome;
+          selectDiarioMentorado.appendChild(opt);
+        });
+      } else {
+        selectDiarioMentorado.innerHTML = '<option value="" disabled selected>Nenhum estudante vinculado.</option>';
+      }
+    } catch (error) {
+      selectDiarioMentorado.innerHTML = '<option value="" disabled selected>Erro ao carregar lista.</option>';
     }
-  });
+  }
+
+  // Função 2: Buscar o histórico de relatórios passados
+  async function carregarHistoricoDiario() {
+    try {
+      const response = await fetch('/api/diarios', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      const data = await response.json();
+
+      listaDiarios.innerHTML = '';
+
+      if (!data.diarios || data.diarios.length === 0) {
+        listaDiarios.innerHTML = '<div class="card" style="text-align: center; color: var(--text-light); padding: 3rem;">Nenhum registo encontrado no seu histórico.</div>';
+        return;
+      }
+
+      data.diarios.forEach(diario => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        
+        let corStatus = '#F39C12'; // PENDENTE (Amarelo)
+        let iconeStatus = 'fa-clock';
+        if (diario.status === 'VALIDADO') { corStatus = 'var(--accent-color)'; iconeStatus = 'fa-check'; }
+        if (diario.status === 'REJEITADO') { corStatus = 'var(--error-color)'; iconeStatus = 'fa-xmark'; }
+
+        // Corrige a data para não sofrer problemas de fuso horário
+        const dataSessao = new Date(diario.dataSessao);
+        const dataFormatada = new Date(dataSessao.getTime() + Math.abs(dataSessao.getTimezoneOffset() * 60000)).toLocaleDateString('pt-BR');
+
+        card.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h4 style="margin: 0; color: var(--primary-color); font-size: 1.1rem;">${diario.mentoradoId ? diario.mentoradoId.nome : 'Estudante Removido'}</h4>
+              <span style="font-size: 0.85rem; color: var(--text-light);"><i class="fa-regular fa-calendar"></i> ${dataFormatada} &nbsp;•&nbsp; <i class="fa-regular fa-clock"></i> ${diario.tempoSessao} minutos</span>
+            </div>
+            <span style="background-color: ${corStatus}; color: white; padding: 0.3rem 0.8rem; border-radius: 12px; font-size: 0.8rem; font-weight: bold;">
+              <i class="fa-solid ${iconeStatus}"></i> ${diario.status}
+            </span>
+          </div>
+          <p style="font-size: 0.95rem; color: var(--text-main); background-color: var(--bg-color); padding: 1rem; border-radius: var(--radius); margin-bottom: 1rem;">
+            ${diario.resumoAtividades.replace(/\n/g, '<br>')}
+          </p>
+          <div style="text-align: right; color: var(--text-light); font-size: 0.85rem;">
+            <strong>Recompensa Estimada:</strong> +${diario.xpGerado} XP
+          </div>
+        `;
+        listaDiarios.appendChild(card);
+      });
+    } catch (error) {
+      listaDiarios.innerHTML = '<div class="card" style="color: var(--error-color); text-align: center;">Erro ao carregar histórico.</div>';
+    }
+  }
+
+  // Função 3: Enviar o formulário
+  if (formDiario) {
+    formDiario.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const btn = document.getElementById('btnSalvarDiario');
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> A Enviar...';
+      btn.disabled = true;
+      alertaDiario.style.display = 'none';
+
+      const payload = {
+        mentoradoId: selectDiarioMentorado.value,
+        dataSessao: document.getElementById('diarioData').value,
+        tempoSessao: document.getElementById('diarioTempo').value,
+        resumoAtividades: document.getElementById('diarioResumo').value
+      };
+
+      try {
+        const response = await fetch('/api/diarios', {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          alertaDiario.className = 'alert alert-success';
+          alertaDiario.innerText = data.message;
+          alertaDiario.style.display = 'block';
+          formDiario.reset();
+          
+          carregarHistoricoDiario().then(() => {
+            document.getElementById('listaDiarios').scrollIntoView({ behavior: 'smooth', block: 'end' });
+          });
+        } else {
+          alertaDiario.className = 'alert alert-error';
+          alertaDiario.innerText = data.error || 'Erro ao guardar o registo.';
+          alertaDiario.style.display = 'block';
+        }
+      } catch (error) {
+        alertaDiario.className = 'alert alert-error';
+        alertaDiario.innerText = 'Erro de rede. Verifique a sua ligação.';
+        alertaDiario.style.display = 'block';
+      } finally {
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submeter para Validação';
+        btn.disabled = false;
+      }
+    });
+  }
+
+  // Gatilho Seguro: Dispara quando a aba do Diário é clicada
+  const btnMenuDiario = document.querySelector('.menu-item[data-tab="diario"]');
+  if (btnMenuDiario) {
+    btnMenuDiario.addEventListener('click', () => {
+      // Se a lista de diários estiver vazia, carrega tudo do zero
+      if (listaDiarios && listaDiarios.children.length === 0) {
+        carregarOpcoesMentorados();
+        carregarHistoricoDiario();
+      }
+    });
+  }
+
+  // ==========================================
+  // LÓGICA DE MEUS MENTORADOS
+  // ==========================================
+  const gridMentorados = document.getElementById('gridMentorados');
+
+  async function carregarMeusMentorados() {
+    try {
+      const response = await fetch('/api/meus-mentorados', {
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+      });
+      const data = await response.json();
+
+      if (!response.ok) throw new Error();
+
+      gridMentorados.innerHTML = '';
+
+      if (data.mentorados.length === 0) {
+        gridMentorados.innerHTML = `
+          <div class="card" style="grid-column: 1/-1; text-align: center; color: var(--text-light); padding: 3rem;">
+            <i class="fa-solid fa-user-slash fa-3x" style="margin-bottom: 1rem; color: #E0E0E0;"></i>
+            <h3>Nenhum aluno vinculado</h3>
+            <p>A coordenação pedagógica ainda não vinculou nenhum estudante à sua tutoria.</p>
+          </div>`;
+        return;
+      }
+
+      data.mentorados.forEach(aluno => {
+        const dados = aluno.dadosMentorado || { turma: 'Sem turma', necessidadeEducacional: 'Não informada' };
+        
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.borderTop = '4px solid var(--accent-color)';
+        
+        card.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+            <div style="width: 50px; height: 50px; background-color: var(--accent-light); color: var(--accent-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">
+              ${aluno.nome.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <h3 style="margin-bottom: 0; font-size: 1.1rem;">${aluno.nome}</h3>
+              <p style="color: var(--text-light); font-size: 0.85rem;">Matrícula: ${aluno.matricula}</p>
+            </div>
+          </div>
+          
+          <div style="background-color: var(--bg-color); padding: 1rem; border-radius: var(--radius); margin-bottom: 1.5rem;">
+            <div style="margin-bottom: 0.5rem;"><strong><i class="fa-solid fa-users-rectangle"></i> Turma:</strong> ${dados.turma}</div>
+            <div><strong><i class="fa-solid fa-brain"></i> Perfil:</strong> ${dados.necessidadeEducacional}</div>
+          </div>
+          
+          <button class="btn btn-outline" style="width: 100%; min-height: 44px; padding: 0.5rem;" onclick="alert('O Diário de Bordo para este aluno será construído na próxima fase!')">
+            <i class="fa-solid fa-book-open"></i> Registar Sessão
+          </button>
+        `;
+        gridMentorados.appendChild(card);
+      });
+
+    } catch (error) {
+      gridMentorados.innerHTML = `<div style="grid-column: 1/-1; color: var(--error-color); text-align: center;">Erro ao carregar estudantes.</div>`;
+    }
+  }
+
+  // Gatilho Seguro: Carrega os mentorados quando clicar na aba
+  const btnMentorados = document.querySelector('.menu-item[data-tab="mentorados"]');
+  
+  if (btnMentorados) {
+    btnMentorados.addEventListener('click', () => {
+      // Só pesquisa se a grelha ainda estiver na fase de "Carregando..." (1 elemento)
+      if (gridMentorados && gridMentorados.children.length <= 1) {
+        carregarMeusMentorados();
+      }
+    });
+  }  
+  // ==========================================
+  // GATILHO SEGURO: TRILHAS DE CAPACITAÇÃO
+  // ==========================================
+  const btnTrilhas = document.querySelector('.menu-item[data-tab="trilhas"]');
+  
+  if (btnTrilhas) {
+    btnTrilhas.addEventListener('click', () => {
+      // Só pesquisa se a grelha ainda estiver na fase de "Carregando..." (1 elemento)
+      if (gridTrilhas && gridTrilhas.children.length <= 1) {
+        carregarTrilhasMonitor();
+      }
+    });
+  } else {
+    console.warn("⚠️ O botão com data-tab='trilhas' não foi encontrado no menu HTML.");
+  }
 });

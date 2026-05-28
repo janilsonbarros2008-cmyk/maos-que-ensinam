@@ -3,68 +3,89 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel de Apoio Multiprofissional - Mãos que Ensinam</title>
+  <title>Painel de Apoio - Mãos que Ensinam</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
+    /* Estilos das Badges e Chamados */
     .urgencia-badge {
-      display: inline-block;
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
+      display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px;
+      font-size: 0.85rem; font-weight: 700; margin-bottom: 1rem;
     }
     .badge-BAIXO { background-color: var(--primary-light); color: var(--primary-color); }
     .badge-MÉDIO { background-color: #FEF9E7; color: #F39C12; }
     .badge-ALTO { background-color: #FDF2E9; color: #E67E22; }
     .badge-EMERGÊNCIA { background-color: #FADBD8; color: var(--error-color); border: 2px solid var(--error-color); }
     
-    .chamado-item {
-      border: 2px solid #E0E0E0;
-      transition: var(--transition);
+    .chamado-item { border: 2px solid #E0E0E0; transition: var(--transition); }
+    .chamado-item.resolvido { opacity: 0.7; border-color: var(--accent-light); background-color: #FAFAFA; }
+    
+    .meta-info { font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem; display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .resposta-box { background-color: var(--accent-light); padding: 1rem; border-radius: var(--radius); margin-top: 1rem; border-left: 4px solid var(--accent-color); }
+
+    /* Estilos das Abas */
+    .apoio-tabs {
+      display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 2px solid #E0E0E0; padding-bottom: 1rem; overflow-x: auto;
     }
-    .chamado-item.resolvido {
-      opacity: 0.7;
-      border-color: var(--accent-light);
-      background-color: #FAFAFA;
+    .tab-btn {
+      background: none; border: none; font-size: 1rem; font-weight: 600; color: var(--text-light);
+      cursor: pointer; padding: 0.5rem 1rem; border-radius: var(--radius); transition: var(--transition);
     }
-    .meta-info {
-      font-size: 0.9rem;
-      color: var(--text-light);
-      margin-bottom: 1rem;
-      display: flex;
-      gap: 1.5rem;
-      flex-wrap: wrap;
-    }
-    .resposta-box {
-      background-color: var(--accent-light);
-      padding: 1rem;
-      border-radius: var(--radius);
-      margin-top: 1rem;
-      border-left: 4px solid var(--accent-color);
-    }
+    .tab-btn:hover { background-color: var(--bg-card); color: var(--primary-color); }
+    .tab-btn.active { background-color: var(--primary-light); color: var(--primary-color); }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
 
   <div class="container" style="max-width: 1000px;">
-    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem;">
+    <header style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem;">
       <div>
         <h1>Painel de Mediação Escolar</h1>
-        <p style="color: var(--text-light);">Acompanhamento de alertas e suporte técnico aos Alunos Monitores.</p>
+        <p style="color: var(--text-light);">Acompanhamento de alertas e validação de relatórios dos Monitores.</p>
       </div>
       <button id="btnSairApoio" class="btn btn-outline" style="width: auto; min-height: auto; padding: 0.5rem 1rem;">
         <i class="fa-solid fa-arrow-right-from-bracket"></i> Sair
       </button>
     </header>
 
-    <div id="listaChamados">
-      <div style="text-align: center; color: var(--text-light); padding: 3rem;">
-        <i class="fa-solid fa-spinner fa-spin fa-2xl" style="color: var(--primary-color);"></i>
-        <p style="margin-top: 1rem;">A carregar pedidos de apoio...</p>
+    <!-- NAVEGAÇÃO DE ABAS -->
+    <nav class="apoio-tabs">
+      <button class="tab-btn active" data-target="seccao-chamados">
+        <i class="fa-solid fa-headset"></i> Pedidos de Apoio
+      </button>
+      <button class="tab-btn" data-target="seccao-validacao">
+        <i class="fa-solid fa-clipboard-check"></i> Validar Diários
+      </button>
+    </nav>
+
+    <!-- ABA 1: CHAMADOS DE SUPORTE -->
+    <div id="seccao-chamados" class="tab-content active">
+      <div id="listaChamados">
+        <div style="text-align: center; color: var(--text-light); padding: 3rem;">
+          <i class="fa-solid fa-spinner fa-spin fa-2xl" style="color: var(--primary-color);"></i>
+          <p style="margin-top: 1rem;">A carregar pedidos de apoio...</p>
+        </div>
       </div>
     </div>
+
+    <!-- ABA 2: VALIDAÇÃO DE DIÁRIOS (NOVO) -->
+    <div id="seccao-validacao" class="tab-content">
+      <div style="margin-bottom: 2rem;">
+        <h2 style="margin: 0; font-size: 1.4rem;">Sessões a Aguardar Validação</h2>
+        <p style="color: var(--text-light);">Analise os relatórios enviados pelos Monitores e aprove para libertar o XP.</p>
+      </div>
+
+      <div id="listaPendentes" style="display: grid; gap: 1.5rem;">
+        <div style="text-align: center; color: var(--text-light); padding: 3rem;">
+          <i class="fa-solid fa-spinner fa-spin fa-2xl" style="color: var(--primary-color);"></i>
+          <p style="margin-top: 1rem;">A procurar diários pendentes...</p>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script src="js/painel-apoio.js"></script>
