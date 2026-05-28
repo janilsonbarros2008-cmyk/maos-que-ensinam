@@ -4,29 +4,48 @@ document.addEventListener('DOMContentLoaded', async function() {
   const token = localStorage.getItem('token');
   const role = localStorage.getItem('userRole');
 
+  // Trava de segurança
   if (!token || role !== 'ADMIN') {
     alert('Acesso negado. Faça login com uma conta de administrador.');
     window.location.href = 'login.html';
     return;
   }
 
-  // Variável global para armazenar os usuários carregados na tela
-  let usuariosEmMemoria = [];
-
+  // ==========================================
+  // VARIÁVEIS GLOBAIS DA INTERFACE (Declaradas apenas UMA VEZ)
+  // ==========================================
   const tabBtns = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
+  const tabelaUsuarios = document.getElementById('tabelaUsuarios');
+  const tabelaTrilhas = document.getElementById('tabelaTrilhas'); 
 
+  let usuariosEmMemoria = [];
+  let trilhasEmMemoria = [];
+
+  // ==========================================
+  // NAVEGAÇÃO DE ABAS COM LAZY LOADING
+  // ==========================================
   tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
+      // Limpa todas as abas
       tabBtns.forEach(b => b.classList.remove('active'));
       tabContents.forEach(c => c.classList.remove('active'));
+
+      // Ativa a aba clicada
       btn.classList.add('active');
-      document.getElementById(btn.getAttribute('data-target')).classList.add('active');
+      const targetId = btn.getAttribute('data-target');
+      document.getElementById(targetId).classList.add('active');
+
+      // Lazy Loading: Só busca as trilhas se a tabela estiver vazia (apenas com o aviso de carregando)
+      if (targetId === 'aba-trilhas' && tabelaTrilhas.children.length <= 1) {
+        carregarTrilhas();
+      }
     });
   });
 
-  const tabelaUsuarios = document.getElementById('tabelaUsuarios');
-
+  // ==========================================
+  // LÓGICA DE USUÁRIOS
+  // ==========================================
   async function carregarUsuarios() {
     try {
       const response = await fetch('/api/gerenciar-usuarios', {
@@ -36,9 +55,9 @@ document.addEventListener('DOMContentLoaded', async function() {
 
       if (!response.ok) throw new Error(data.error);
 
-      usuariosEmMemoria = data.usuarios; // Guarda a lista na memória
+      usuariosEmMemoria = data.usuarios;
       tabelaUsuarios.innerHTML = '';
-      
+
       data.usuarios.forEach(user => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -50,84 +69,87 @@ document.addEventListener('DOMContentLoaded', async function() {
             <button class="action-btn edit-btn" onclick="abrirModalEdicao('${user._id}')" title="Editar Usuário">
               <i class="fa-solid fa-pen"></i>
             </button>
-            <button class="action-btn delete-btn" data-id="${user._id}" data-nome="${user.nome}" title="Excluir Usuário">
+            <button class="action-btn delete-btn" onclick="excluirUsuario('${user._id}', '${user.nome}')" title="Excluir Usuário">
               <i class="fa-solid fa-trash"></i>
             </button>
           </td>
         `;
         tabelaUsuarios.appendChild(tr);
       });
-
-      configurarBotoesExclusao();
-
     } catch (error) {
       tabelaUsuarios.innerHTML = `<tr><td colspan="5" style="color: var(--error-color); text-align: center;">Erro: ${error.message}</td></tr>`;
     }
   }
 
-  function configurarBotoesExclusao() {
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-      btn.addEventListener('click', async function() {
-        const id = this.getAttribute('data-id');
-        const nome = this.getAttribute('data-nome');
+  // Função Global de Exclusão de Usuários
+  window.excluirUsuario = async function(id, nome) {
+    if (confirm(`⚠️ Tem certeza que deseja excluir "${nome}" permanentemente?`)) {
+      try {
+        const response = await fetch('/api/gerenciar-usuarios', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ id })
+        });
+        if (response.ok) carregarUsuarios();
+        else alert((await response.json()).error);
+      } catch (error) {
+        alert('Erro de conexão ao tentar excluir.');
+      }
+    }
+  };
 
-        if (confirm(`⚠️ Tem certeza que deseja excluir "${nome}"?`)) {
-          this.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-          this.disabled = true;
-
-          try {
-            const response = await fetch('/api/gerenciar-usuarios', {
-              method: 'DELETE',
-              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-              body: JSON.stringify({ id })
-            });
-            if (response.ok) carregarUsuarios();
-            else alert((await response.json()).error);
-          } catch (error) {
-            alert('Erro de conexão.');
-            carregarUsuarios();
-          }
-        }
-      });
-    });
-  }
-
-  // ==========================================
-  // LÓGICA DA MODAL DE EDIÇÃO
-  // ==========================================
+  // Modal de Edição de Usuários
   const modalEdicao = document.getElementById('modalEdicao');
   const btnFecharModal = document.getElementById('btnFecharModal');
   const formEdicao = document.getElementById('formEdicao');
   const alertaEdicao = document.getElementById('alertaEdicao');
 
-  // Expõe a função para ser chamada pelo clique no HTML
   window.abrirModalEdicao = function(id) {
-    // Procura o usuário na nossa lista da memória
     const user = usuariosEmMemoria.find(u => u._id === id);
     if (!user) return;
-
-    // Preenche os campos
+    
     document.getElementById('editId').value = user._id;
     document.getElementById('editNome').value = user.nome;
     document.getElementById('editEmail').value = user.email;
     document.getElementById('editMatricula').value = user.matricula;
     document.getElementById('editRole').value = user.role;
     
+    // NOVO: Lógica de Vinculação de Mentorados
+    const blocoVinculo = document.getElementById('blocoVinculoMonitor');
+    const selectMonitor = document.getElementById('editMonitorVinculado');
+    
+    if (user.role === 'MENTORADO') {
+      blocoVinculo.style.display = 'block';
+      
+      // Filtra apenas os monitores e preenche o dropdown
+      const monitores = usuariosEmMemoria.filter(u => u.role === 'MONITOR');
+      selectMonitor.innerHTML = '<option value="">Nenhum / Remover vínculo</option>';
+      monitores.forEach(m => {
+        const option = document.createElement('option');
+        option.value = m._id;
+        option.textContent = `${m.nome} (${m.matricula})`;
+        selectMonitor.appendChild(option);
+      });
+      
+      // Se ele já tiver um monitor, seleciona-o na lista
+      if (user.dadosMentorado && user.dadosMentorado.monitorVinculado) {
+        selectMonitor.value = user.dadosMentorado.monitorVinculado;
+      }
+    } else {
+      blocoVinculo.style.display = 'none';
+    }
+
     alertaEdicao.style.display = 'none';
-    modalEdicao.classList.add('active'); // Abre a modal
+    modalEdicao.classList.add('active');
   };
 
-  btnFecharModal.addEventListener('click', () => {
-    modalEdicao.classList.remove('active');
-  });
+  btnFecharModal.addEventListener('click', () => modalEdicao.classList.remove('active'));
 
   formEdicao.addEventListener('submit', async function(e) {
     e.preventDefault();
-    
     const btnSalvar = document.getElementById('btnSalvarEdicao');
     btnSalvar.innerText = 'A guardar...';
     btnSalvar.disabled = true;
-    alertaEdicao.style.display = 'none';
 
     const payload = {
       id: document.getElementById('editId').value,
@@ -137,18 +159,24 @@ document.addEventListener('DOMContentLoaded', async function() {
       role: document.getElementById('editRole').value
     };
 
+    if (payload.role === 'MENTORADO') {
+      payload.dadosMentorado = {
+        monitorVinculado: document.getElementById('editMonitorVinculado').value || null
+      };
+    }
+
     try {
       const response = await fetch('/api/gerenciar-usuarios', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(payload)
       });
-
+      
       const data = await response.json();
-
+      
       if (response.ok) {
         modalEdicao.classList.remove('active');
-        carregarUsuarios(); // Recarrega a tabela com os novos dados
+        carregarUsuarios(); // Atualiza a tabela na hora
       } else {
         alertaEdicao.innerText = data.error || 'Erro ao atualizar dados.';
         alertaEdicao.className = 'alert alert-error';
@@ -164,17 +192,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
   });
 
-  // Logout e inicialização
-  document.getElementById('btnSairAdmin').addEventListener('click', function() {
-    localStorage.clear();
-    window.location.href = 'login.html';
-  });
-
   // ==========================================
   // LÓGICA DO CRUD DE TRILHAS
   // ==========================================
-  let trilhasEmMemoria = [];
-  const tabelaTrilhas = document.getElementById('tabelaTrilhas');
   const modalTrilha = document.getElementById('modalTrilha');
   const formTrilha = document.getElementById('formTrilha');
   const alertaTrilha = document.getElementById('alertaTrilha');
@@ -190,7 +210,7 @@ document.addEventListener('DOMContentLoaded', async function() {
       tabelaTrilhas.innerHTML = '';
 
       if (trilhasEmMemoria.length === 0) {
-        tabelaTrilhas.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-light);">Nenhuma trilha cadastrada.</td></tr>`;
+        tabelaTrilhas.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-light);">Nenhum módulo cadastrado.</td></tr>`;
         return;
       }
 
@@ -237,7 +257,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     } else {
       document.getElementById('tituloModalTrilha').innerText = 'Novo Módulo de Capacitação';
       document.getElementById('trilhaId').value = '';
-      // Sugere automaticamente a próxima ordem
       document.getElementById('trilhaOrdem').value = trilhasEmMemoria.length + 1;
     }
     
@@ -276,7 +295,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
       if (response.ok) {
         modalTrilha.classList.remove('active');
-        carregarTrilhas();
+        carregarTrilhas(); // Atualiza a tabela na hora
       } else {
         const data = await response.json();
         alertaTrilha.innerText = data.error || 'Erro ao guardar a trilha.';
@@ -284,7 +303,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         alertaTrilha.style.display = 'block';
       }
     } catch (error) {
-      alertaTrilha.innerText = 'Erro de comunicação.';
+      alertaTrilha.innerText = 'Erro de comunicação com o servidor.';
       alertaTrilha.className = 'alert alert-error';
       alertaTrilha.style.display = 'block';
     } finally {
@@ -306,7 +325,14 @@ document.addEventListener('DOMContentLoaded', async function() {
         alert('Erro ao excluir a trilha.');
       }
     }
-  };    
+  };
 
+  // Logout
+  document.getElementById('btnSairAdmin').addEventListener('click', function() {
+    localStorage.clear();
+    window.location.href = 'login.html';
+  });
+
+  // DISPARO INICIAL (Ao abrir o painel, a aba Usuários é a primeira, então já puxamos eles)
   carregarUsuarios();
 });

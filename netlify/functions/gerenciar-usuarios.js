@@ -72,6 +72,9 @@ exports.handler = async (event) => {
       if (dadosAtualizados.dadosProfissional) {
         usuario.dadosProfissional = { ...usuario.dadosProfissional, ...dadosAtualizados.dadosProfissional };
       }
+      if (dadosAtualizados.dadosMentorado) {
+        usuario.dadosMentorado = { ...usuario.dadosMentorado, ...dadosAtualizados.dadosMentorado };
+      }
 
       // O comando save() vai acionar o nosso middleware pre('validate') automaticamente!
       await usuario.save();

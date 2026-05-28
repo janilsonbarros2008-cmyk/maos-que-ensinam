@@ -23,10 +23,10 @@ const userSchema = new mongoose.Schema({
     type: String, 
     required: true 
   },
-  role: { 
-    type: String, 
-    enum: ['MONITOR', 'COORDENADOR', 'MULTIPROFISSIONAL', 'ADMIN'],
-    required: true 
+  role: {
+    type: String,
+    enum: ['MONITOR', 'MULTIPROFISSIONAL', 'COORDENADOR', 'ADMIN', 'MENTORADO'],
+    required: [true, 'O nível de acesso é obrigatório']
   },
 
   // ==========================================
@@ -47,6 +47,12 @@ const userSchema = new mongoose.Schema({
     especialidade: { type: String }, // ex: "Psicopedagogo", "Fonoaudiólogo", "Coordenador de Área"
     registroConselho: { type: String }, // ex: "CRP 12345" (opcional, útil para área da saúde)
     escolaVinculada: { type: String } // Prepara o app para atuar em múltiplas escolas da GRE
+  },
+  dadosMentorado: {
+    turma: String,
+    necessidadeEducacional: String,
+    // NOVO: Guarda o ID do aluno monitor responsável por ele
+    monitorVinculado: { type: mongoose.Schema.Types.ObjectId, ref: 'User' } 
   }
 }, { 
   timestamps: true 

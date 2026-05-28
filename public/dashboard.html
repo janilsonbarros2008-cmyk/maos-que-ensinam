@@ -16,7 +16,7 @@
 
         <aside class="sidebar">
             <div class="sidebar-brand">
-                <i class="fa-solid fa-hands-holding-child"></i>
+                <img src="images/logo-simples.png" alt="" width="40" height="40">
                 <span>Mãos que Ensinam</span>
             </div>
 
@@ -139,9 +139,18 @@
             </section>
 
             <section id="mentorados" class="tab-content">
-                <div class="card">
-                    <h2>Meus Mentorados</h2>
-                    <p style="color: var(--text-light);">Agenda e perfis dos estudantes vinculados à sua tutoria.</p>
+                <div style="margin-bottom: 2rem;">
+                    <h2><i class="fa-solid fa-user-group"></i> Estudantes Acompanhados</h2>
+                    <p style="color: var(--text-light);">Estes são os alunos vinculados à sua tutoria pela coordenação.
+                    </p>
+                </div>
+
+                <div id="gridMentorados"
+                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+                    <div style="grid-column: 1/-1; text-align: center; color: var(--text-light); padding: 3rem;">
+                        <i class="fa-solid fa-spinner fa-spin fa-2xl"></i>
+                        <p>A carregar estudantes...</p>
+                    </div>
                 </div>
             </section>
 

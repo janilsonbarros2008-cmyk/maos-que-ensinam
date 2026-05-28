@@ -6,14 +6,27 @@
   <title>Cadastro - Mãos que Ensinam</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- TRAVA DE SEGURANÇA: Executa antes mesmo de desenhar a página -->
+  <script>
+    if (localStorage.getItem('userRole') !== 'ADMIN') {
+      window.location.href = 'login.html';
+    }
+  </script>
 </head>
 <body>
 
   <div class="container">
-    <div class="card">
-      <h2>Cadastro de Usuário</h2>
-      <p style="color: var(--text-light); margin-bottom: 2rem;">
-        Insira os dados para registrar um novo membro na plataforma.
+    <div class="card" style="position: relative;">
+      
+      <!-- Botão Voltar para o Painel Admin -->
+      <a href="painel-admin.html" class="btn btn-outline" style="position: absolute; top: 2rem; right: 2rem; width: auto; min-height: auto; padding: 0.5rem 1rem; font-size: 0.9rem;">
+        <i class="fa-solid fa-arrow-left"></i> Voltar ao Painel
+      </a>
+
+      <h2 style="margin-top: 1rem;">Cadastro de Usuário</h2>
+      <p style="color: var(--text-light); margin-bottom: 2rem; max-width: 80%;">
+        Registe novos membros (Monitores, Equipa Escolar ou Alunos Mentorados) na plataforma.
       </p>
 
       <div id="alertBox" class="alert"></div>
@@ -34,21 +47,24 @@
           <input type="text" id="matricula" name="matricula" placeholder="Ex: 2026001" required>
         </div>
 
+        <!-- A senha para o Mentorado será gerada de forma padrão pelo sistema ou inserida aqui para manter o modelo -->
         <div class="form-group">
-          <label for="senha">Senha de Acesso</label>
-          <input type="password" id="senha" name="senha" placeholder="Crie uma senha segura" required>
+          <label for="senha">Senha de Acesso Inicial</label>
+          <input type="password" id="senha" name="senha" placeholder="Crie uma senha segura (Ex: Mudar@123)" required>
         </div>
 
         <div class="form-group">
-          <label for="role">Nível de Acesso</label>
+          <label for="role">Perfil no Sistema</label>
           <select id="role" name="role" required>
             <option value="" disabled selected>Selecione um perfil...</option>
-            <option value="MONITOR">Aluno Monitor</option>
+            <option value="MONITOR">Aluno Monitor (Tutor)</option>
+            <option value="MENTORADO">Aluno Mentorado (Estudante Acompanhado)</option>
             <option value="MULTIPROFISSIONAL">Equipe Multiprofissional</option>
             <option value="COORDENADOR">Coordenação Pedagógica</option>
           </select>
         </div>
 
+        <!-- BLOCO 1: MONITOR -->
         <div id="camposMonitor" style="display: none; background-color: var(--primary-light); padding: 1.5rem; border-radius: var(--radius); margin-bottom: 1.5rem;">
           <h3 style="font-size: 1.1rem; color: var(--primary-color);">Dados Acadêmicos (Monitor)</h3>
           <div class="form-group">
@@ -65,6 +81,20 @@
           </div>
         </div>
 
+        <!-- BLOCO 2: MENTORADO (NOVO) -->
+        <div id="camposMentorado" style="display: none; background-color: #E8F8F5; padding: 1.5rem; border-radius: var(--radius); margin-bottom: 1.5rem; border: 1px solid #A3E4D7;">
+          <h3 style="font-size: 1.1rem; color: #117A65;"><i class="fa-solid fa-seedling"></i> Dados do Estudante Acompanhado</h3>
+          <div class="form-group">
+            <label>Turma do Estudante</label>
+            <input type="text" id="turmaMentorado" placeholder="Ex: 1º Ano A">
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label>Necessidade Educacional (Neurodivergência)</label>
+            <input type="text" id="necessidadeMentorado" placeholder="Ex: TDAH, Autismo, Dislexia...">
+          </div>
+        </div>
+
+        <!-- BLOCO 3: PROFISSIONAL / COORDENAÇÃO -->
         <div id="camposProfissional" style="display: none; background-color: var(--accent-light); padding: 1.5rem; border-radius: var(--radius); margin-bottom: 1.5rem;">
           <h3 style="font-size: 1.1rem; color: var(--accent-color);">Dados Profissionais e Vínculo</h3>
           
@@ -85,6 +115,7 @@
             </div>
           </div>
 
+          <!-- Formulário Oculto de Nova Escola -->
           <div id="blocoNovaEscola" style="display: none; background-color: #FFFFFF; padding: 1.5rem; border-radius: var(--radius); margin-top: 1rem; border: 1px dashed var(--primary-color);">
             <h4 style="font-size: 0.95rem; color: var(--primary-color); margin-bottom: 1rem;">Adicionar Instituição à Rede</h4>
             <div class="form-group">
@@ -107,13 +138,14 @@
     const form = document.getElementById('formCadastro');
     const roleSelect = document.getElementById('role');
     const camposMonitor = document.getElementById('camposMonitor');
+    const camposMentorado = document.getElementById('camposMentorado');
     const camposProfissional = document.getElementById('camposProfissional');
     const blocoEspecialidade = document.getElementById('blocoEspecialidade');
     const alertBox = document.getElementById('alertBox');
     const btnSubmit = document.getElementById('btnSubmit');
 
     // ==========================================
-    // LÓGICA DE ESCOLAS (NOVA)
+    // LÓGICA DE ESCOLAS
     // ==========================================
     const selectEscola = document.getElementById('escolaVinculada');
     const btnToggleNovaEscola = document.getElementById('btnToggleNovaEscola');
@@ -125,7 +157,6 @@
       try {
         const response = await fetch('/api/escolas');
         const data = await response.json();
-        
         selectEscola.innerHTML = '<option value="" disabled selected>Selecione uma escola...</option>';
         data.escolas.forEach(escola => {
           const option = document.createElement('option');
@@ -133,7 +164,6 @@
           option.textContent = `${escola.nome} - ${escola.cidade}/${escola.estado}`;
           selectEscola.appendChild(option);
         });
-
         if (escolaSelecionada) selectEscola.value = escolaSelecionada;
       } catch (error) {
         selectEscola.innerHTML = '<option value="" disabled>Erro ao carregar escolas</option>';
@@ -187,29 +217,25 @@
     carregarEscolas();
 
     // ==========================================
-    // LÓGICA DE INTERFACE DE PERFIS (CORRIGIDA)
+    // LÓGICA DE INTERFACE DE PERFIS
     // ==========================================
     roleSelect.addEventListener('change', function() {
       camposMonitor.style.display = 'none';
+      camposMentorado.style.display = 'none';
       camposProfissional.style.display = 'none';
 
       if (this.value === 'MONITOR') {
         camposMonitor.style.display = 'block';
+      } else if (this.value === 'MENTORADO') {
+        camposMentorado.style.display = 'block';
       } else if (this.value === 'MULTIPROFISSIONAL' || this.value === 'COORDENADOR') {
-        // Agora o Coordenador também visualiza o bloco de escola
         camposProfissional.style.display = 'block';
-        
-        // Esconde o campo de especialidade médica se for Coordenador
-        if (this.value === 'COORDENADOR') {
-          blocoEspecialidade.style.display = 'none';
-        } else {
-          blocoEspecialidade.style.display = 'block';
-        }
+        blocoEspecialidade.style.display = this.value === 'COORDENADOR' ? 'none' : 'block';
       }
     });
 
     // ==========================================
-    // LÓGICA DE CADASTRO (CORRIGIDA)
+    // LÓGICA DE CADASTRO
     // ==========================================
     form.addEventListener('submit', async function(e) {
       e.preventDefault();
@@ -231,15 +257,18 @@
           turma: document.getElementById('turma').value,
           turno: document.getElementById('turno').value
         };
+      } else if (payload.role === 'MENTORADO') {
+        payload.dadosMentorado = {
+          turma: document.getElementById('turmaMentorado').value,
+          necessidadeEducacional: document.getElementById('necessidadeMentorado').value
+        };
       } else if (payload.role === 'MULTIPROFISSIONAL' || payload.role === 'COORDENADOR') {
-        // Captura a escola vinculada para ambos os perfis de gestão
         payload.dadosProfissional = {
           especialidade: document.getElementById('especialidade').value || 'Coordenação',
           escolaVinculada: selectEscola.value
         };
       }
 
-      // Validação extra de segurança no front-end
       if ((payload.role === 'MULTIPROFISSIONAL' || payload.role === 'COORDENADOR') && !payload.dadosProfissional.escolaVinculada) {
         mostrarAlerta('Por favor, selecione ou registre uma Escola Vinculada.', 'error');
         btnSubmit.innerText = 'Cadastrar Usuário';
@@ -260,6 +289,7 @@
           mostrarAlerta('Usuário cadastrado com sucesso!', 'success');
           form.reset();
           camposMonitor.style.display = 'none';
+          camposMentorado.style.display = 'none';
           camposProfissional.style.display = 'none';
         } else {
           mostrarAlerta(data.error || 'Erro ao realizar o cadastro.', 'error');
