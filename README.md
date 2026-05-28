@@ -53,8 +53,8 @@ E-mail Aluno mentor: janilsonbarros@seduc.pi.gov.br
 
 Senha: 123
 
-# O administrador pode gerenciar os usuários e as trilhas de capacitação.
+• O administrador pode gerenciar os usuários e as trilhas de capacitação.
 
-# O apoio poderá responder demandas do aluno mentor, e válidar diários.
+• O apoio poderá responder demandas do aluno mentor, e válidar diários.
 
-# O aluno mentor pode fazer as formações nas 'Trilhas de Capacitação', consultar a 'Assistente de IA', visualizar seus alunos mentorados, preencher o 'Diário de Bordo' e consultar a equipe multiprofissional.
+• O aluno mentor pode fazer as formações nas 'Trilhas de Capacitação', consultar a 'Assistente de IA', visualizar seus alunos mentorados, preencher o 'Diário de Bordo' e consultar a equipe multiprofissional.
