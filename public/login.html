@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login - Mãos que Ensinam</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
 
   <div class="container" style="max-width: 500px; margin-top: 10vh;">
@@ -30,7 +32,8 @@
 
         <div class="form-group" style="margin-bottom: 2rem;">
           <label for="senha">Palavra-passe</label>
-          <input type="password" id="senha" name="senha" placeholder="Introduza a sua palavra-passe" required autocomplete="current-password">
+          <input type="password" id="senha" name="senha" placeholder="Introduza a sua palavra-passe" required
+            autocomplete="current-password">
         </div>
 
         <button type="submit" class="btn btn-primary" id="btnSubmit">Entrar no Sistema</button>
@@ -49,7 +52,7 @@
     const alertBox = document.getElementById('alertBox');
     const btnSubmit = document.getElementById('btnSubmit');
 
-    form.addEventListener('submit', async function(e) {
+    form.addEventListener('submit', async function (e) {
       e.preventDefault();
 
       // Configura o estado de carregamento do botão
@@ -66,18 +69,27 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, senha })
+
         });
 
         const data = await response.json();
 
         if (response.ok) {
-          // Guardar o Token JWT e as informações básicas no localStorage
+          // Guarda as credenciais de forma segura no navegador
           localStorage.setItem('token', data.token);
           localStorage.setItem('userRole', data.usuario.role);
           localStorage.setItem('userName', data.usuario.nome);
 
-          // Redireciona para o Dashboard Geral
-          window.location.href = 'dashboard.html';
+          // O PULO DO GATO: Roteamento dinâmico baseado no nível de acesso
+          const perfil = data.usuario.role;
+
+          if (perfil === 'MONITOR') {
+            window.location.href = 'dashboard.html';
+          } else if (perfil === 'ADMIN') {
+            window.location.href = 'painel-admin.html'; // Adicionamos esta linha!
+          } else if (['COORDENADOR', 'MULTIPROFISSIONAL'].includes(perfil)) {
+            window.location.href = 'painel-apoio.html';
+          }
         } else {
           // Exibe erros tratados vindos do servidor (ex: "Credenciais inválidas")
           mostrarErro(data.error || 'Não foi possível efetuar o login.');
@@ -104,4 +116,5 @@
     }
   </script>
 </body>
+
 </html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel do Administrador - Mãos que Ensinam</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .admin-tabs {
+      display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 2px solid #E0E0E0; padding-bottom: 1rem;
+    }
+    .tab-btn {
+      background: none; border: none; font-size: 1.1rem; font-weight: 700; color: var(--text-light); cursor: pointer; padding: 0.5rem 1rem; border-radius: var(--radius); transition: var(--transition);
+    }
+    .tab-btn:hover { background-color: var(--primary-light); color: var(--primary-color); }
+    .tab-btn.active { background-color: var(--primary-color); color: #FFF; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Estilos da Tabela de Usuários */
+    .data-table {
+      width: 100%; border-collapse: collapse; background-color: #FFF; border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow);
+    }
+    .data-table th, .data-table td {
+      padding: 1rem; text-align: left; border-bottom: 1px solid #E0E0E0;
+    }
+    .data-table th {
+      background-color: var(--primary-light); color: var(--primary-color); font-weight: 700;
+    }
+    .data-table tr:hover { background-color: #FAFAFA; }
+    
+    .role-badge {
+      padding: 0.3rem 0.6rem; border-radius: 12px; font-size: 0.8rem; font-weight: 700;
+    }
+    .role-ADMIN { background-color: #2C3E50; color: #FFF; }
+    .role-COORDENADOR { background-color: #F39C12; color: #FFF; }
+    .role-MULTIPROFISSIONAL { background-color: #27AE60; color: #FFF; }
+    .role-MONITOR { background-color: var(--primary-color); color: #FFF; }
+
+    .action-btn {
+      background: none; border: none; cursor: pointer; font-size: 1.1rem; padding: 0.5rem; border-radius: 50%; transition: var(--transition);
+    }
+    .edit-btn { color: var(--primary-color); }
+    .edit-btn:hover { background-color: var(--primary-light); }
+    .delete-btn { color: var(--error-color); }
+    .delete-btn:hover { background-color: #FADBD8; }
+    /* Estilos da Janela Modal */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.5); display: none;
+      align-items: center; justify-content: center; z-index: 1000;
+      overflow-y: auto;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-content {
+      background-color: var(--bg-card); width: 100%; max-width: 500px;
+      padding: 2rem; border-radius: var(--radius); box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .close-modal { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-light); }
+  </style>
+</head>
+<body>
+
+  <div class="container" style="max-width: 1200px;">
+    <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+      <div>
+        <h1><i class="fa-solid fa-shield-halved"></i> Administração do Sistema</h1>
+        <p style="color: var(--text-light);">Gestão de acessos, turmas e conteúdos de capacitação.</p>
+      </div>
+      <button id="btnSairAdmin" class="btn btn-outline" style="width: auto; min-height: auto; padding: 0.5rem 1rem;">
+        <i class="fa-solid fa-arrow-right-from-bracket"></i> Sair
+      </button>
+    </header>
+
+    <nav class="admin-tabs">
+      <button class="tab-btn active" data-target="aba-usuarios">
+        <i class="fa-solid fa-users"></i> Gestão de Usuários
+      </button>
+      <button class="tab-btn" data-target="aba-trilhas">
+        <i class="fa-solid fa-graduation-cap"></i> Trilhas de Capacitação
+      </button>
+    </nav>
+
+    <div id="aba-usuarios" class="tab-content active">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="margin: 0; font-size: 1.4rem;">Usuários Cadastrados</h2>
+        <a href="cadastro.html" class="btn btn-primary" style="width: auto; min-height: auto; padding: 0.6rem 1.2rem; font-size: 0.95rem;">
+          <i class="fa-solid fa-user-plus"></i> Novo Usuário
+        </a>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>E-mail</th>
+              <th>Matrícula</th>
+              <th>Perfil</th>
+              <th style="text-align: right;">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaUsuarios">
+            <tr><td colspan="5" style="text-align: center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> Carregando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="aba-trilhas" class="tab-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2 style="margin: 0; font-size: 1.4rem;">Módulos de Capacitação</h2>
+        <button class="btn btn-primary" onclick="abrirModalTrilha()" style="width: auto; min-height: auto; padding: 0.6rem 1.2rem; font-size: 0.95rem;">
+          <i class="fa-solid fa-plus"></i> Novo Módulo
+        </button>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 80px;">Ordem</th>
+              <th>Título</th>
+              <th>Status</th>
+              <th>Última Atualização</th>
+              <th style="text-align: right;">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaTrilhas">
+            <tr><td colspan="5" style="text-align: center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> Carregando trilhas...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==========================================
+       JANELA MODAL DE EDIÇÃO
+       ========================================== -->
+  <div id="modalEdicao" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 style="font-size: 1.4rem; margin: 0;">Editar Usuário</h2>
+        <button id="btnFecharModal" class="close-modal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      
+      <div id="alertaEdicao" class="alert" style="display: none;"></div>
+
+      <form id="formEdicao">
+        <input type="hidden" id="editId">
+        
+        <div class="form-group">
+          <label>Nome Completo</label>
+          <input type="text" id="editNome" required>
+        </div>
+        
+        <div class="form-group">
+          <label>E-mail</label>
+          <input type="email" id="editEmail" required>
+        </div>
+        
+        <div class="form-group">
+          <label>Matrícula</label>
+          <input type="text" id="editMatricula" required>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 2rem;">
+          <label>Perfil de Acesso</label>
+          <select id="editRole" required>
+            <option value="MONITOR">Aluno Monitor</option>
+            <option value="MULTIPROFISSIONAL">Equipe Multiprofissional</option>
+            <option value="COORDENADOR">Coordenação Pedagógica</option>
+            <option value="ADMIN">Administrador</option>
+          </select>
+          <small style="color: var(--text-light); margin-top: 0.5rem; display: block;">
+            Nota: Ao alterar o perfil, dados específicos (como turma ou especialidade) podem precisar de reconfiguração via perfil do próprio utilizador.
+          </small>
+        </div>
+
+        <button type="submit" id="btnSalvarEdicao" class="btn btn-primary">Guardar Alterações</button>
+      </form>
+    </div>
+  </div>
+  <div id="modalTrilha" class="modal-overlay">
+    <div class="modal-content" style="max-width: 700px;">
+      <div class="modal-header">
+        <h2 id="tituloModalTrilha" style="font-size: 1.4rem; margin: 0;">Novo Módulo de Capacitação</h2>
+        <button id="btnFecharModalTrilha" class="close-modal"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      
+      <div id="alertaTrilha" class="alert" style="display: none;"></div>
+
+      <form id="formTrilha">
+        <input type="hidden" id="trilhaId">
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label>Título do Módulo</label>
+            <input type="text" id="trilhaTitulo" placeholder="Ex: Introdução ao TDAH" required>
+          </div>
+          <div class="form-group">
+            <label>Ordem de Exibição</label>
+            <input type="number" id="trilhaOrdem" min="1" value="1" required>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label>Breve Descrição (Subtítulo)</label>
+          <input type="text" id="trilhaDescricao" placeholder="Resumo do que o aluno vai aprender..." required>
+        </div>
+
+        <div class="form-group">
+          <label>Conteúdo Pedagógico (Texto)</label>
+          <textarea id="trilhaConteudo" rows="8" placeholder="Escreva aqui o conteúdo do módulo..." required style="resize: vertical;"></textarea>
+        </div>
+        
+        <div class="form-group" style="margin-bottom: 2rem;">
+          <label>Status</label>
+          <select id="trilhaStatus" required>
+            <option value="RASCUNHO">Rascunho (Invisível para alunos)</option>
+            <option value="PUBLICADO">Publicado (Visível no painel do Monitor)</option>
+          </select>
+        </div>
+
+        <button type="submit" id="btnSalvarTrilha" class="btn btn-primary">Guardar Módulo</button>
+      </form>
+    </div>
+  </div>    
+  <script src="js/painel-admin.js"></script>
+</body>
+</html>
